@@ -47,6 +47,7 @@ def load_task_instances(path: pathlib.Path) -> list[dict]:
                 "id": t["id"],
                 "type": "coding",
                 "prompt": t["prompt"],
+                "branch": t.get("branch"),
                 "grade_command": t.get("grade_command", spec.get("grade_command")),
                 "rubric": t.get("rubric"),
             }

@@ -18,17 +18,17 @@ experiments:
     arms:
       - name: no-wiki
         prompt_mode: raw
-        repo: YOURUSER/dispatch-eval-nowiki   # fork WITHOUT a generated wiki
+        repo: tedfoley-cog/dispatch-eval-nowiki   # fork WITHOUT a generated wiki
         branch: eval-frozen
       - name: wiki
         prompt_mode: raw
-        repo: YOURUSER/dispatch-eval          # fork WITH a generated wiki
+        repo: tedfoley-cog/dispatch-eval          # fork WITH a generated wiki
         branch: eval-frozen
       - name: askdevin-prompt
         prompt_mode: deepwiki_prompt          # harness asks DeepWiki to write the prompt
-        repo: YOURUSER/dispatch-eval
+        repo: tedfoley-cog/dispatch-eval
         branch: eval-frozen
-        wiki_repo: YOURUSER/dispatch-eval     # repo whose wiki is queried
+        wiki_repo: tedfoley-cog/dispatch-eval     # repo whose wiki is queried
         private_wiki: true                    # use authenticated Devin DeepWiki MCP
 
   # ------------------------------------------------------------------
@@ -39,12 +39,12 @@ experiments:
     arms:
       - name: raw-prompt
         prompt_mode: raw
-        repo: YOURUSER/dispatch-eval
+        repo: tedfoley-cog/dispatch-eval
         branch: eval-frozen
       - name: playbook
         prompt_mode: playbook
         playbook_id: playbook-XXXX            # see playbooks/dispatch_change_playbook.md
-        repo: YOURUSER/dispatch-eval
+        repo: tedfoley-cog/dispatch-eval
         branch: eval-frozen
 
   # ------------------------------------------------------------------
@@ -55,9 +55,9 @@ experiments:
     arms:
       - name: no-skills
         prompt_mode: raw
-        repo: YOURUSER/dispatch-eval
+        repo: tedfoley-cog/dispatch-eval
         branch: eval-frozen                   # no .agents/skills/
       - name: skills
         prompt_mode: raw
-        repo: YOURUSER/dispatch-eval
+        repo: tedfoley-cog/dispatch-eval
         branch: eval-frozen-skills            # same commit + skills/ committed

@@ -3,8 +3,9 @@
 Usage:
     python -m harness.collect [--watch]
 
-Polls every launched session until it settles (blocked/finished/stopped/expired),
-then records status, ACUs, structured output, PRs and timing into
+Polls every launched session until it settles (exit/error/suspended, or running
+with a finished/blocked status_detail), then records status, ACUs, structured
+output, PRs and timing into
 results/results.jsonl. Safe to re-run; already-collected runs are skipped.
 """
 
@@ -17,14 +18,12 @@ import logging
 import pathlib
 import argparse
 
-from .devin_api import DevinAPI
+from .devin_api import DevinAPI, is_settled
 
 log = logging.getLogger("harness.collect")
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RUNS = ROOT / "results" / "runs.jsonl"
 RESULTS = ROOT / "results" / "results.jsonl"
-
-SETTLED = {"blocked", "finished", "stopped", "expired", "exit", "suspended"}
 
 
 def jsonl(path: pathlib.Path) -> list[dict]:
@@ -51,18 +50,19 @@ def main() -> None:
         log.info("%d/%d runs pending", len(pending), len(runs))
         for r in pending:
             sid = r["session_id"]
-            d = api.get_session_v1(sid)
-            status = d.get("status_enum") or d.get("status")
-            if status not in SETTLED:
+            d = api.get_session(sid)
+            if not is_settled(d):
                 continue
-            acus = api.get_acus(sid)
-            v3 = api.get_session_v3(sid) or {}
+            status = d.get("status")
+            acus = d.get("acus_consumed")
+            acus = float(acus) if acus is not None else api.get_acus(sid)
             rec = {
                 **{k: r[k] for k in ("run_key", "experiment", "arm", "task_id", "rep", "session_id", "url")},
                 "status": status,
+                "status_detail": d.get("status_detail"),
                 "acus": acus,
                 "structured_output": d.get("structured_output"),
-                "pull_requests": v3.get("pull_requests") or d.get("pull_request"),
+                "pull_requests": d.get("pull_requests"),
                 "created_at": d.get("created_at"),
                 "updated_at": d.get("updated_at"),
                 "collected_at": int(time.time()),

@@ -23,6 +23,7 @@ tasks:
       incidents per project, following the repo's existing router/service-layer
       conventions. Include tests. Work autonomously and open a PR when done.
   - id: fix-seeded-bug
+    branch: eval-bug-1
     prompt: |
       In the repository {repo} (branch {branch}) the test suite has failing
       tests. Find the bug causing the failures, fix it following repo

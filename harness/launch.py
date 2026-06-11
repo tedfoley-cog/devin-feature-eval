@@ -21,7 +21,7 @@ import argparse
 
 import yaml
 
-from .devin_api import DevinAPI
+from .devin_api import DevinAPI, is_settled
 from . import deepwiki
 from .tasks import load_task_instances, build_schema
 
@@ -44,7 +44,8 @@ def append_run(rec: dict) -> None:
 
 def build_prompt(arm: dict, task: dict, exp: dict) -> str:
     mode = arm.get("prompt_mode", "raw")
-    base = task["prompt"].format(repo=arm["repo"], branch=arm.get("branch", "main"))
+    branch = task.get("branch") or arm.get("branch", "main")
+    base = task["prompt"].format(repo=arm["repo"], branch=branch)
     if mode == "raw":
         return base
     if mode == "playbook":
@@ -122,8 +123,7 @@ def main() -> None:
         while len(inflight) >= max_inflight:
             time.sleep(30)
             for sid in list(inflight):
-                st = api.get_session_v1(sid).get("status_enum") or api.get_session_v1(sid).get("status")
-                if st in ("blocked", "stopped", "finished", "expired", "exit", "suspended"):
+                if is_settled(api.get_session(sid)):
                     inflight.remove(sid)
 
     for r in todo:

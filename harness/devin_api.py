@@ -1,8 +1,8 @@
-"""Thin client for the Devin REST API (v1 + v3 org endpoints).
+"""Thin client for the Devin REST API (v3 org endpoints only).
 
-Auth: set DEVIN_API_KEY (an API key from the org you want to run the eval in).
-Optionally set DEVIN_ORG_ID (org-...) to enable v3 org endpoints for exact
-per-session ACU readings; without it we fall back to best-effort fields on v1.
+Auth: set DEVIN_API_KEY (an API key from the org you want to run the eval in)
+and DEVIN_ORG_ID (org-... id). All endpoints are org-scoped v3 routes, which
+also return exact per-session ACU readings (`acus_consumed`).
 """
 
 from __future__ import annotations
@@ -17,11 +17,28 @@ BASE = os.environ.get("DEVIN_API_BASE", "https://api.devin.ai")
 
 log = logging.getLogger("harness.api")
 
+# v3 session statuses: new, claimed, running, exit, error, suspended, resuming.
+# A session is "settled" when it has stopped doing work: terminal statuses, or
+# running with a terminal/blocked status_detail.
+SETTLED_STATUSES = {"exit", "error", "suspended"}
+SETTLED_DETAILS = {"finished", "waiting_for_user", "waiting_for_approval"}
+
+
+def is_settled(session: dict) -> bool:
+    status = session.get("status")
+    if status in SETTLED_STATUSES:
+        return True
+    return status == "running" and session.get("status_detail") in SETTLED_DETAILS
+
+
+def _devin_id(session_id: str) -> str:
+    return session_id if session_id.startswith("devin-") else f"devin-{session_id}"
+
 
 class DevinAPI:
     def __init__(self, api_key: str | None = None, org_id: str | None = None):
         self.api_key = api_key or os.environ["DEVIN_API_KEY"]
-        self.org_id = org_id or os.environ.get("DEVIN_ORG_ID")
+        self.org_id = org_id or os.environ["DEVIN_ORG_ID"]
         self.s = requests.Session()
         self.s.headers["Authorization"] = f"Bearer {self.api_key}"
 
@@ -47,9 +64,8 @@ class DevinAPI:
         tags: list[str] | None = None,
         structured_output_schema: dict | None = None,
         max_acu_limit: int | None = None,
-        idempotent: bool = False,
     ) -> dict:
-        body: dict = {"prompt": prompt, "idempotent": idempotent}
+        body: dict = {"prompt": prompt}
         if title:
             body["title"] = title
         if playbook_id:
@@ -60,38 +76,32 @@ class DevinAPI:
             body["structured_output_schema"] = structured_output_schema
         if max_acu_limit:
             body["max_acu_limit"] = max_acu_limit
-        return self._req("POST", "/v1/sessions", json=body)
+        return self._req("POST", f"/v3/organizations/{self.org_id}/sessions", json=body)
 
-    def get_session_v1(self, session_id: str) -> dict:
-        return self._req("GET", f"/v1/session/{session_id}")
+    def get_session(self, session_id: str) -> dict:
+        return self._req(
+            "GET", f"/v3/organizations/{self.org_id}/sessions/{_devin_id(session_id)}"
+        )
 
     def send_message(self, session_id: str, message: str) -> None:
-        self._req("POST", f"/v1/session/{session_id}/message", json={"message": message})
+        self._req(
+            "POST",
+            f"/v3/organizations/{self.org_id}/sessions/{_devin_id(session_id)}/messages",
+            json={"message": message},
+        )
 
-    # ---- v3 org endpoints (exact ACUs) ----
-    def get_session_v3(self, devin_id: str) -> dict | None:
-        if not self.org_id:
-            return None
-        if not devin_id.startswith("devin-"):
-            devin_id = f"devin-{devin_id}"
+    def get_acus(self, session_id: str) -> float | None:
+        """Exact ACUs for a session. Prefers session detail, falls back to consumption."""
         try:
-            return self._req("GET", f"/v3/organizations/{self.org_id}/sessions/{devin_id}")
+            d = self.get_session(session_id)
+            if d.get("acus_consumed") is not None:
+                return float(d["acus_consumed"])
         except requests.HTTPError as e:
-            log.warning("v3 session fetch failed for %s: %s", devin_id, e)
-            return None
-
-    def get_acus(self, devin_id: str) -> float | None:
-        """Exact ACUs for a session. Prefers v3 detail, falls back to consumption."""
-        d = self.get_session_v3(devin_id)
-        if d and d.get("acus_consumed") is not None:
-            return float(d["acus_consumed"])
-        if not self.org_id:
-            return None
-        if not devin_id.startswith("devin-"):
-            devin_id = f"devin-{devin_id}"
+            log.warning("v3 session fetch failed for %s: %s", session_id, e)
         try:
             c = self._req(
-                "GET", f"/v3/organizations/{self.org_id}/consumption/daily/sessions/{devin_id}"
+                "GET",
+                f"/v3/organizations/{self.org_id}/consumption/daily/sessions/{_devin_id(session_id)}",
             )
             return float(c["total_acus"])
         except requests.HTTPError:
