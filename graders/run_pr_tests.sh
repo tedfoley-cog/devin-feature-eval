@@ -25,7 +25,7 @@ git checkout -q prbranch
 python3 -m venv "$WORK/venv"
 PY="$WORK/venv/bin/python"
 "$PY" -m pip install -q --upgrade pip >/dev/null
-"$PY" -m pip install -q -e ".[dev]" >/dev/null
+"$PY" -m pip install -q -e ".[dev]" >/dev/null || "$PY" -m pip install -q -e . >/dev/null
 
 # The dispatch suite has a known teardown quirk: DROP DATABASE at session
 # finish can raise ObjectInUse, making pytest exit nonzero even when every
