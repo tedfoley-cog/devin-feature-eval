@@ -36,7 +36,13 @@ set -e
 SUMMARY=$(echo "$OUT" | grep -E "[0-9]+ (passed|failed)" | tail -1 || true)
 echo "$SUMMARY" >&2
 
+ERRORS=$(echo "$SUMMARY" | grep -oE "[0-9]+ error" | grep -oE "[0-9]+" || true)
+
 if echo "$SUMMARY" | grep -qE "[0-9]+ failed"; then
+  echo "0.0"
+  exit 1
+elif [ -n "$ERRORS" ] && { [ "$ERRORS" != "1" ] || ! echo "$OUT" | grep -q "ObjectInUse"; }; then
+  # Errors other than the single known DROP DATABASE teardown quirk fail the run.
   echo "0.0"
   exit 1
 elif echo "$SUMMARY" | grep -qE "[0-9]+ passed"; then
