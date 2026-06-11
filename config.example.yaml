@@ -43,7 +43,7 @@ experiments:
         branch: eval-frozen
       - name: playbook
         prompt_mode: playbook
-        playbook_id: playbook-XXXX            # see playbooks/dispatch_change_playbook.md
+        playbook_id: playbook-3bf2c98336c548618b54f38329e45dc8            # see playbooks/dispatch_change_playbook.md
         repo: tedfoley-cog/dispatch-eval
         branch: eval-frozen
 
