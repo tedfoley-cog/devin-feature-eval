@@ -1,0 +1,29 @@
+# Coding tasks for the Playbooks / Skills experiments on a dispatch fork.
+# Each task must be objectively gradeable. grade_command receives PR_URL and
+# RUN_KEY env vars; exit 0 = pass, last stdout line may be a float score 0..1.
+id: dispatch-coding
+type: coding
+grade_command: "bash graders/run_pr_tests.sh"
+tasks:
+  - id: add-field-incident
+    prompt: |
+      In the repository {repo} (work off branch {branch}, create your own feature
+      branch and open a PR into {branch}): add a new optional text field
+      `external_reference_url` to the Incident model, exposed through the API
+      (Pydantic models), with an Alembic migration, following the repo's existing
+      conventions for model/schema/migration changes. Add or update tests
+      covering the new field. Do not ask the user anything; work autonomously
+      and open a PR when done. Do not apply migrations to any hosted/shared
+      database — local test databases only.
+  - id: add-endpoint-healthcheck
+    prompt: |
+      In the repository {repo} (work off branch {branch}, create your own feature
+      branch and open a PR into {branch}): add a new authenticated REST endpoint
+      `GET /incidents/metrics/open-count` that returns the count of open
+      incidents per project, following the repo's existing router/service-layer
+      conventions. Include tests. Work autonomously and open a PR when done.
+  - id: fix-seeded-bug
+    prompt: |
+      In the repository {repo} (branch {branch}) the test suite has failing
+      tests. Find the bug causing the failures, fix it following repo
+      conventions, and open a PR into {branch} with the fix. Work autonomously.
