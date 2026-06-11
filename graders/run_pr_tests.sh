@@ -33,7 +33,7 @@ PY="$WORK/venv/bin/python"
 set +e
 OUT=$("$PY" -m pytest tests/ -q 2>&1)
 set -e
-SUMMARY=$(echo "$OUT" | grep -E "[0-9]+ (passed|failed)" | tail -1)
+SUMMARY=$(echo "$OUT" | grep -E "[0-9]+ (passed|failed)" | tail -1 || true)
 echo "$SUMMARY" >&2
 
 if echo "$SUMMARY" | grep -qE "[0-9]+ failed"; then
