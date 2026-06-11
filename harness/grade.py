@@ -58,7 +58,7 @@ def grade_coding(task: dict, rec: dict) -> dict:
     pr_url = so.get("pr_url")
     if not pr_url and rec.get("pull_requests"):
         prs = rec["pull_requests"]
-        pr_url = prs[0]["pr_url"] if isinstance(prs, list) else prs.get("url")
+        pr_url = prs[0].get("pr_url")
     if not pr_url:
         return {"score": 0.0, "success": False, "reason": "no PR produced"}
     cmd = task.get("grade_command")

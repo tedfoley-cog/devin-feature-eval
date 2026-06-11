@@ -119,7 +119,9 @@ def main() -> None:
             acu_stats.append((a_p, a_l, a_h))
             acc_stats.append((s_p, s_l, s_h))
             cps_stats.append(cps_ci)
-            med = sorted(acus)[len(acus) // 2]
+            s = sorted(acus)
+            mid = len(s) // 2
+            med = (s[mid - 1] + s[mid]) / 2 if len(s) % 2 == 0 else s[mid]
             sr = sum(1 for r in rs if r.get("success")) / len(rs)
             summary_lines.append(
                 f"| {arm} | {len(rs)} | {a_p:.2f} [{a_l:.2f},{a_h:.2f}] | {med:.2f} "
