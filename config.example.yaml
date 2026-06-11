@@ -1,0 +1,63 @@
+# Copy to config.yaml and fill in your IDs.
+# Env vars required: DEVIN_API_KEY (personal-org key), DEVIN_ORG_ID (org-... id,
+# enables exact per-session ACU readings via the v3 org endpoints).
+
+defaults:
+  reps: 8               # runs per arm per task instance (use --pilot 3 first)
+  concurrency: 6        # max sessions in flight
+  max_acu_limit: 15     # hard ACU cap per session, protects the budget
+  launch_spacing_s: 20
+
+experiments:
+  # ------------------------------------------------------------------
+  # 1) DeepWiki: control (no wiki) vs wiki vs ask-devin-generated prompt
+  # ------------------------------------------------------------------
+  - name: deepwiki-qa
+    task_file: tasks/dispatch/comprehension_qa.yaml
+    max_acu_limit: 10
+    arms:
+      - name: no-wiki
+        prompt_mode: raw
+        repo: tedfoley-cog/dispatch-eval-nowiki   # fork WITHOUT a generated wiki
+        branch: eval-frozen
+      - name: wiki
+        prompt_mode: raw
+        repo: tedfoley-cog/dispatch-eval          # fork WITH a generated wiki
+        branch: eval-frozen
+      - name: askdevin-prompt
+        prompt_mode: deepwiki_prompt          # harness asks DeepWiki to write the prompt
+        repo: tedfoley-cog/dispatch-eval
+        branch: eval-frozen
+        wiki_repo: tedfoley-cog/dispatch-eval     # repo whose wiki is queried
+        private_wiki: true                    # use authenticated Devin DeepWiki MCP
+
+  # ------------------------------------------------------------------
+  # 2) Playbooks: raw prompt vs playbook-driven
+  # ------------------------------------------------------------------
+  - name: playbook-coding
+    task_file: tasks/dispatch/coding_tasks.yaml
+    arms:
+      - name: raw-prompt
+        prompt_mode: raw
+        repo: tedfoley-cog/dispatch-eval
+        branch: eval-frozen
+      - name: playbook
+        prompt_mode: playbook
+        playbook_id: playbook-XXXX            # see playbooks/dispatch_change_playbook.md
+        repo: tedfoley-cog/dispatch-eval
+        branch: eval-frozen
+
+  # ------------------------------------------------------------------
+  # 3) Skills: repo branch without skills vs identical branch with skills
+  # ------------------------------------------------------------------
+  - name: skills-coding
+    task_file: tasks/dispatch/coding_tasks.yaml
+    arms:
+      - name: no-skills
+        prompt_mode: raw
+        repo: tedfoley-cog/dispatch-eval
+        branch: eval-frozen                   # no .agents/skills/
+      - name: skills
+        prompt_mode: raw
+        repo: tedfoley-cog/dispatch-eval
+        branch: eval-frozen-skills            # same commit + skills/ committed

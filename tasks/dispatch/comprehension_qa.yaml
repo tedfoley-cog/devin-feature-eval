@@ -1,0 +1,27 @@
+# Codebase-comprehension Q&A for a fork of Netflix/dispatch.
+# Answer key verified against the actual source (June 2026, main).
+# Grading: answer must contain all `must_contain` terms, or any of `accept_any`.
+id: dispatch-qa
+type: qa
+questions_per_session: 5
+questions:
+  - q: "Which file creates the main FastAPI application instance(s)?"
+    must_contain: ["main.py"]
+  - q: "What ORM does the backend use, and in which package directory is the database session/engine setup code?"
+    must_contain: ["sqlalchemy", "database"]
+  - q: "Where (directory path) is the Slack plugin implemented?"
+    must_contain: ["plugins", "dispatch_slack"]
+  - q: "In which file is the service-layer function that creates a new incident defined?"
+    must_contain: ["incident", "service.py"]
+  - q: "How is application configuration loaded? Name the file and the mechanism/library."
+    must_contain: ["config.py", "starlette"]
+  - q: "Where is the background scheduler class defined?"
+    must_contain: ["scheduler.py"]
+  - q: "What frontend framework does Dispatch use and where does the frontend code live?"
+    must_contain: ["vue", "static/dispatch"]
+  - q: "What tool manages database migrations and where are the migration revision files stored?"
+    must_contain: ["alembic", "revisions"]
+  - q: "What test framework is used for the backend test suite?"
+    accept_any: ["pytest"]
+  - q: "Name the directory that contains the base classes for the plugin framework."
+    must_contain: ["plugins", "base"]
