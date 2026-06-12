@@ -60,7 +60,7 @@ class DevinAPI:
                 time.sleep(wait)
                 continue
             r.raise_for_status()
-            return r.json()
+            return r.json() if r.content else None
         if last_exc is not None:
             raise last_exc
         r.raise_for_status()
