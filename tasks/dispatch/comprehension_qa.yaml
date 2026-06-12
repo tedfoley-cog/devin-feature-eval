@@ -25,3 +25,10 @@ questions:
     accept_any: ["pytest"]
   - q: "Name the directory that contains the base classes for the plugin framework."
     must_contain: ["plugins", "base"]
+  # Harder multi-hop questions (require tracing across files, not just locating one).
+  - q: "When an incident is created via the REST API, the heavy lifting happens asynchronously. Name the flow function that gets dispatched and the FastAPI mechanism used to run it after the response is sent."
+    must_contain: ["incident_create_flow", "background"]
+  - q: "Which single function dispatches the transition logic when an incident's status changes (e.g. Active -> Stable -> Closed), and in which file is it defined?"
+    must_contain: ["status_flow_dispatcher", "flows.py"]
+  - q: "There is a scheduled task that reminds commanders to close incidents. What is its registered task name, and at what time of day does it run?"
+    must_contain: ["incident-close-reminder", "18:00"]
