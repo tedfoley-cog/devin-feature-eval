@@ -53,6 +53,7 @@ class DevinAPI:
                 log.warning("%s on %s, retrying in %ss", type(e).__name__, path, wait)
                 time.sleep(wait)
                 continue
+            last_exc = None
             if r.status_code in (429, 500, 502, 503, 504):
                 wait = 2**attempt * 5
                 log.warning("HTTP %s on %s, retrying in %ss", r.status_code, path, wait)
