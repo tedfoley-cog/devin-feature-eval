@@ -43,15 +43,26 @@ class DevinAPI:
         self.s.headers["Authorization"] = f"Bearer {self.api_key}"
 
     def _req(self, method: str, path: str, retries: int = 4, **kw):
+        last_exc: Exception | None = None
         for attempt in range(retries):
-            r = self.s.request(method, f"{BASE}{path}", timeout=60, **kw)
+            try:
+                r = self.s.request(method, f"{BASE}{path}", timeout=60, **kw)
+            except (requests.ConnectionError, requests.Timeout) as e:
+                last_exc = e
+                wait = 2**attempt * 5
+                log.warning("%s on %s, retrying in %ss", type(e).__name__, path, wait)
+                time.sleep(wait)
+                continue
+            last_exc = None
             if r.status_code in (429, 500, 502, 503, 504):
                 wait = 2**attempt * 5
                 log.warning("HTTP %s on %s, retrying in %ss", r.status_code, path, wait)
                 time.sleep(wait)
                 continue
             r.raise_for_status()
-            return r.json()
+            return r.json() if r.content else None
+        if last_exc is not None:
+            raise last_exc
         r.raise_for_status()
 
     # ---- sessions ----
